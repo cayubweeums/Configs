@@ -1,0 +1,378 @@
+---
+# desktop
+#
+#
+
+#####  Install and enable linux lqx kernel #####
+- name: Add Linux lqx repo
+  become: yes
+  shell:
+    "dnf copr enable rmnscnce/kernel-lqx -y"
+- name: Install Linux lqx kernel, devel, and headers
+  become: yes
+  shell:
+    "dnf in kernel-lqx kernel-lqx-devel kernel-lqx-headers -y"
+
+- name: Set systemd default kernel path
+  blockinfile:
+    path: /etc/systemd/system/default-kernel.path
+    create: yes
+    block: |
+      [Unit]
+      Description=Fedora default kernel updater
+      
+      [Path]
+      PathChanged=/boot
+      
+      [Install]
+      WantedBy=default.target
+  become: yes
+
+- name: Set systemd default kernel path
+  blockinfile:
+    path: /etc/systemd/system/default-kernel.service
+    create: yes
+    block: |
+      [Unit]
+      Description=Fedora default kernel updater
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/sh -c "grubby --set-default /boot/vmlinuz*lqx*"
+  become: yes
+
+- name: Enable system path unit
+  become: yes
+  shell:
+    "systemctl enable default-kernel.path"
+
+- name: Ensure lqx kernel will run on reboot
+  become: yes
+  shell:
+    "grubby --set-default /boot/vmlinuz*lqx*"
+
+- name: Kernel ready, reboot and continue
+  reboot:
+  become: yes
+
+# Install Misc packages
+- name: Install Misc packages
+  become: yes
+  block:
+    - name: Install Admin Tools
+      dnf:
+        name: "@Administration tools"
+    - name: Install C Dev Tools and Libs
+      dnf:
+        name: "@C Development Tools and Libraries"
+    - name: Install Hardware Support
+      dnf:
+        name: "@Hardware Support"
+    - name: Install Development Tools
+      dnf:
+        name: "@Development Tools"
+    - name: Install Development Libraries
+      dnf:
+        name: "@Development Libraries"
+    - name: Install nano
+      dnf:
+        name: "nano"  
+    - name: Update packages
+      dnf:
+        name: "*"
+        state: latest
+      become: yes  
+    - name: ~~~~~~~~~~~~~ CHECK IF THIS REBOOT BROKE EVERYTHING ~~~~~~~~~~~~~
+      reboot:
+      become: yes
+
+# Install and config Nvidia drivers
+- name: Nvidia Install
+  block:
+    - name: Install akmod-nvidia
+      become: yes
+      shell:
+        "dnf install akmod-nvidia -y"
+    - name: Install xorg x11 nvidia cuda
+      become: yes
+      shell:
+        "dnf install xorg-x11-drv-nvidia-cuda -y"
+
+- name: Nvidia Drivers ready, reboot and continue
+  reboot:
+  become: yes
+
+# Setup snap and install btop, pycharm, teams, and Intellij
+- name: Install snap - Btop and pycharm
+  become: yes
+  block:
+  - name: Install snapd
+    dnf:
+      name: snapd
+  - name: Create symbolic link
+    command: ln -s /var/lib/snapd/snap /snap warn=false
+    changed_when: False
+  - name: Install btop
+    snap:
+      name: btop
+  - name: Install pycharm
+    snap:
+      name: pycharm-community
+      classic: yes
+  - name: Install intellij
+    snap:
+      name: intellij-idea-community
+      classic: yes
+
+- name: Reboot post snap install and config
+  reboot:
+  become: yes
+
+
+# Enable H264
+- name: H264
+  become: yes
+  block:
+  - name: H264 Install
+    command: dnf config-manager --set-enabled fedora-cisco-openh264 warn=False
+    changed_when: False
+  - dnf:
+      name:  
+      - gstreamer1-plugin-openh264
+      - mozilla-openh264
+
+# Add flatpak and install flatpaks
+- name: Add the flathub flatpak repository remote to the user installation
+  become: yes
+  shell:
+    "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
+
+- name: Install the flatpaks from flathub for current user
+  become: yes
+  flatpak:
+    name: '{{ item }}'
+    state: present
+  loop:
+  - https://flathub.org/repo/appstream/org.libreoffice.LibreOffice.flatpakref
+  - https://flathub.org/repo/appstream/org.mozilla.Thunderbird.flatpakref
+  - com.github.tchx84.Flatseal
+  - com.github.muriloventuroso.easyssh
+  - com.vscodium.codium
+  - com.leinardi.gwe
+
+# Install other complex Packages
+- name: Install Sublime repo
+  become: yes
+  shell:
+    "rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg"  
+- name: Select Sublime repo channel
+  become: yes
+  shell:
+    "dnf config-manager --add-repo https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo -y"  
+- name: Install Sublime
+  become: yes
+  dnf:
+    name: "sublime-text"
+
+# Handle kitty configs
+- name: Customize kitty terminal
+  block:
+    - name: Create Documents/Scripts
+      file:
+        path: /home/cayub/Documents/Scripts
+        state: directory
+        mode: '0755'
+    
+    - name: Create Documents/Misc
+      file:
+        path: /home/cayub/Documents/Misc
+        state: directory
+        mode: '0755'
+
+    - name: Create Documents/Code
+      file:
+        path: /home/cayub/Documents/Code
+        state: directory
+        mode: '0755'
+    
+    - name: Make kitty config folder
+      command: mkdir -p ~/.config/kitty/
+    
+    - name: Move kitty.conf
+      copy:
+        src: files/kitty.conf
+        dest: /home/cayub/.config/kitty/
+        owner: cayub
+        group: cayub
+    
+    - name: Install oh my zsh framework
+      become: yes
+      become_user: cayub
+      raw: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      args:
+        executable: /bin/sh
+    
+    - name: Move .zshrc over
+      copy:
+        src: files/.zshrc
+        dest: /home/cayub/.zshrc
+        owner: cayub
+        group: cayub
+    
+    - name: Move .p10k.zsh over
+      copy:
+        src: files/.p10k.zsh
+        dest: /home/cayub/.p10k.zsh
+        owner: cayub
+        group: cayub        
+    
+    - name: Clone theme powerlevel10k
+      become: yes
+      become_user: cayub
+      shell:
+        "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k"
+
+    - name: Git checkout zsh auto suggestions
+      git:
+        repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
+        dest: /home/cayub/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+    
+    - name: Git checkout zsh syntax highlighting
+      git:
+        repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git'
+        dest: /home/cayub/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+
+    - name: Git checkout nerdfonts [This takes awhile]
+      git:
+        repo: 'https://github.com/ryanoasis/nerd-fonts.git'
+        dest: /home/cayub/Documents/Misc/nerd-fonts
+    
+    - name: Set zsh as default shell
+      become: yes
+      user:
+        name: cayub
+        shell: /usr/bin/zsh
+
+    - name: Set Perms for Install nerdfonts
+      file:
+        dest: /home/cayub/Documents/Misc/nerd-fonts/install.sh
+        mode: a+x
+
+    - name: Begin nerd-font Install [This takes awhile]
+      command: sh /home/cayub/Documents/Misc/nerd-fonts/install.sh
+
+    - name: Move custom_commands.sh
+      copy:
+        src: files/custom_commands.sh
+        dest: /home/cayub/Documents/Scripts/
+        owner: cayub
+        group: cayub
+    
+    - name: Move main_tmux.sh and Set Perms
+      block:
+      - name: Move main_tmux.sh
+        copy:
+          src: files/main_tmux.sh
+          dest: /home/cayub/Documents/Scripts/
+          owner: cayub
+          group: cayub
+      - name: Set Perms for main_tmux.sh
+        file:
+          dest: /home/cayub/Documents/Scripts/main_tmux.sh
+          mode: a+x
+
+    - name: Install ruby clocale
+      gem:
+        name: clocale
+        state: latest
+    
+    - name: Install ruby filesize
+      gem:
+        name: filesize
+        state: latest
+
+    - name: Install ruby rdoc
+      gem:
+        name: rdoc
+        state: latest
+
+    - name: Install ruby colorls
+      gem:
+        name: colorls
+        state: latest
+
+# Install and config wine and dependencies
+- name: Install Wine
+  block:
+    - name: Enable wine repo
+      become: yes
+      shell:
+        "dnf config-manager --add-repo https://dl.winehq.org/wine-builds/fedora/35/winehq.repo"
+    - name: Install wine stable
+      become: yes
+      shell:
+        "dnf install winehq-stable --allowerasing -y"
+  become: yes
+
+# Config and Install drivers for xbox controllers
+- name: Clone and install xpadneo
+  block:
+    - name: Clone xpadneo
+      git:
+        repo: 'https://github.com/atar-axis/xpadneo.git'
+        dest: /home/cayub/Downloads/xpadneo
+    - name: Install xpadneo
+      become: yes
+      command: sh /home/cayub/Downloads/xpadneo/install.sh
+
+# Dynamic wallpaper install and config
+- name: Dynamic wallpaper install
+  become: yes
+  block:
+    - name: Install dynamic wallpapers
+      dnf: 
+        name: plasma-wallpapers-dynamic
+    - name: Move wallpapers
+      copy:
+        src: files/wallpapers
+        dest: /home/cayub/Documents/Misc/
+        owner: cayub
+        group: cayub
+
+- name: Move Main-Desktop config
+  copy:
+    src: files/Main-Desktop.tar.gz_
+    dest: /home/cayub/Downloads/
+    owner: cayub
+    group: cayub
+
+# Set kde repo to latest from zawertun
+- name: Set Copr Repo for KDE to zawertun/kde
+  become: yes
+  shell:
+    "dnf copr enable zawertun/kde -y && dnf update --refresh -y"
+
+# Remove unwanted KDE packages
+- name: Unwanted KDE packages
+  become: yes
+  dnf:
+    name:
+    - akgregator
+    - kget
+    - kmail
+    - knode
+    - konqueror
+    - kontact
+    state: absent
+
+
+
+- name: dnf cleanup
+  become: yes
+  become_method: sudo
+  dnf:
+    autoremove: yes
+
+- name: Final Reboot into Completed System
+  reboot:
+  become: yes

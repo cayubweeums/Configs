@@ -1,0 +1,52 @@
+---
+# Create base distro from minimal fedora netinstall
+#
+
+- name: Install base distro
+  dnf:
+    name: "{{ base_packages }}"
+  become: yes
+  tags: base_packages
+
+- name: Install the rpmfusion and fonts repo packages
+  dnf:
+    state: present
+    disable_gpg_check: yes
+    name:
+      - https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts.distribution_version }}.noarch.rpm
+      - https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts.distribution_version }}.noarch.rpm
+  become: yes
+  tags: rpmfusion
+
+- name: Install Programs (Archive Utilities)
+  package:
+    state: present
+    name: "{{ archive_packages }}"
+  become: yes
+  tags: archives
+
+- name: Install Programs (Media Utilities)
+  package:
+    state: present
+    name: "{{ codecs_packages }}"
+  become: yes
+  tags: codecs
+
+- name: enable earlyoom
+  systemd:
+    name: earlyoom
+    enabled: yes
+    masked: no
+    state: started
+  become: yes
+  tags: base_packages
+
+- name: Set graphical target
+  file:
+    src: /usr/lib/systemd/system/graphical.target
+    dest: /etc/systemd/system/default.target
+    state: link
+  become: yes
+  tags: base_packages
+
+...

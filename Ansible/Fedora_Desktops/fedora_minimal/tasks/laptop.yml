@@ -1,0 +1,331 @@
+---
+# laptop
+#
+#
+
+# Install Misc packages
+- name: Install Misc packages
+  become: yes
+  block:
+    - name: Install Admin Tools
+      dnf:
+        name: "@Administration tools"
+    - name: Install C Dev Tools and Libs
+      dnf:
+        name: "@C Development Tools and Libraries"
+    - name: Install Hardware Support
+      dnf:
+        name: "@Hardware Support"
+    - name: Install Development Tools
+      dnf:
+        name: "@Development Tools"
+    - name: Install Development Libraries
+      dnf:
+        name: "@Development Libraries"
+    - name: Install nano
+      dnf:
+        name: "nano"    
+         
+
+# # Setup atlas-server smb share mount
+# - name: Mount network share
+#   mount:
+#     src: serverip:/sharelocation
+#     path: /home/cayub/atlas-server
+#     fstype: cifs
+#     opts: 'username={{ username }},password={{ password }}'
+#     state: mounted
+#   become: true
+
+# Throws error - fatal: [192.168.1.100]: FAILED! => {"changed": false, "msg": "Error mounting /home/cayub/atlas-server: mount: /home/cayub/atlas-server: bad option; for several filesystems (e.g. nfs, cifs) you might need a /sbin/mount.<type> helper program.\n"}
+
+
+
+# Add flatpak and install flatpaks
+- name: Add the flathub flatpak repository remote to the user installation
+  flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: user
+
+- name: Install the flatpaks from flathub for current user
+  become: yes
+  flatpak:
+    name: '{{ item }}'
+    state: present
+  loop:
+  - https://flathub.org/repo/appstream/org.libreoffice.LibreOffice.flatpakref
+  - https://flathub.org/repo/appstream/org.mozilla.Thunderbird.flatpakref
+  - com.sublimetext.three
+  - org.js.nuclear.Nuclear
+  - com.github.tchx84.Flatseal
+  - com.github.muriloventuroso.easyssh
+  - com.visualstudio.code
+
+
+# Setup snap and install btop, pycharm
+- name: Install snap - Btop and pycharm
+  become: yes
+  block:
+  - name: Install snapd
+    dnf:
+      name: snapd
+  - name: Create symbolic link
+    command: ln -s /var/lib/snapd/snap /snap warn=false
+    changed_when: False
+  - name: Install btop
+    snap:
+      name: btop
+  - name: Install pycharm
+    snap:
+      name: pycharm-community
+      classic: yes
+
+
+# Enable H264
+- name: H264
+  become: yes
+  block:
+  - name: H264
+    command: dnf config-manager --set-enabled fedora-cisco-openh264 warn=False
+    changed_when: False
+  - dnf:
+      name:  
+      - gstreamer1-plugin-openh264
+      - mozilla-openh264
+  
+
+#####  Install and enable linux surface kernel #####
+- name: Add Linux Surface repo
+  become: yes
+  shell:
+    "dnf config-manager --add-repo=https://pkg.surfacelinux.com/fedora/linux-surface.repo"
+
+- name: Remove libwacom
+  dnf:
+    name: libwacom
+    state: absent
+  become: yes
+
+- name: Install linux surface kernel and dependencies
+  dnf:
+    name: "{{ item }}"
+  become: yes
+  with_items: 
+    - kernel-surface
+    - iptsd
+    - libwacom-surface
+
+- name: Set sysctl iptsd to be enabled
+  become: yes
+  command: systemctl enable iptsd
+
+- name: Set systemd default kernel path
+  blockinfile:
+    path: /etc/systemd/system/default-kernel.path
+    create: yes
+    block: |
+      [Unit]
+      Description=Fedora default kernel updater
+      
+      [Path]
+      PathChanged=/boot
+      
+      [Install]
+      WantedBy=default.target
+  become: yes
+
+- name: Set systemd default kernel path
+  blockinfile:
+    path: /etc/systemd/system/default-kernel.service
+    create: yes
+    block: |
+      [Unit]
+      Description=Fedora default kernel updater
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/sh -c "grubby --set-default /boot/vmlinuz*surface*"
+  become: yes
+
+- name: Enable system path unit
+  become: yes
+  shell:
+    "systemctl enable default-kernel.path"
+
+- name: Ensure surface kernel will run on reboot
+  become: yes
+  shell:
+    "grubby --set-default /boot/vmlinuz*surface*"
+
+
+# Post Kernel install update grub and reboot
+- name: Update Grub and Initramfs
+  command: '{{ item }}'
+  with_items:
+    - 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+    - 'dracut --force --regenerate-all -v'
+  become: yes
+
+- name: Kernel and Grub ready, reboot and continue
+  reboot:
+  become: yes
+
+
+# Handle kitty configs
+- name: Customize kitty terminal
+  block:
+    - name: Create Documents/Scripts
+      file:
+        path: /home/cayub/Documents/Scripts
+        state: directory
+        mode: '0755'
+    
+    - name: Create Documents/Misc
+      file:
+        path: /home/cayub/Documents/Misc
+        state: directory
+        mode: '0755'
+    
+    - name: Create Documents/Misc/wallpapers
+      file:
+        path: /home/cayub/Documents/Misc/wallpapers
+        state: directory
+        mode: '0755'
+    
+    - name: Make kitty config folder
+      command: mkdir -p ~/.config/kitty/
+    
+    - name: Move kitty.conf
+      copy:
+        src: files/kitty.conf
+        dest: /home/cayub/.config/kitty/
+        owner: cayub
+        group: cayub
+    
+    - name: Install oh my zsh framework
+      become: yes
+      become_user: cayub
+      raw: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      args:
+        executable: /bin/sh
+    # - name: Set zsh as default terminal for root
+    #   raw: chsh -s /bin/zsh
+    # - name: Set zsh as default terminal for user
+    #   raw: chsh -s /bin/zsh cayub
+    
+    - name: Move .zshrc over
+      copy:
+        src: files/.zshrc
+        dest: /home/cayub/.zshrc
+        owner: cayub
+        group: cayub
+    
+    - name: Move .p10k.zsh over
+      copy:
+        src: files/.p10k.zsh
+        dest: /home/cayub/.p10k.zsh
+        owner: cayub
+        group: cayub        
+    
+    - name: Clone theme powerlevel10k
+      become: yes
+      become_user: cayub
+      shell:
+        "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k"
+
+    - name: Git checkout zsh auto suggestions
+      git:
+        repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
+        dest: /home/cayub/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+    
+    - name: Git checkout zsh syntax highlighting
+      git:
+        repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git'
+        dest: /home/cayub/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+
+    - name: Git checkout nerdfonts [This takes awhile]
+      git:
+        repo: 'https://github.com/ryanoasis/nerd-fonts.git'
+        dest: /home/cayub/Documents/Misc/nerd-fonts
+    
+    - name: Set zsh as default shell
+      become: yes
+      user:
+        name: cayub
+        shell: /usr/bin/zsh
+
+    - name: Set Perms for Install nerdfonts
+      file:
+        dest: /home/cayub/Documents/Misc/nerd-fonts/install.sh
+        mode: a+x
+
+    - name: Begin nerd-font Install [This takes awhile]
+      command: sh /home/cayub/Documents/Misc/nerd-fonts/install.sh
+
+    - name: Move custom_commands.sh
+      copy:
+        src: files/custom_commands.sh
+        dest: /home/cayub/Documents/Scripts/
+        owner: cayub
+        group: cayub
+    
+    - name: Move main_tmux.sh and Set Perms
+      block:
+      - name: Move main_tmux.sh
+        copy:
+          src: files/main_tmux.sh
+          dest: /home/cayub/Documents/Scripts/
+          owner: cayub
+          group: cayub
+      - name: Set Perms for main_tmux.sh
+        file:
+          dest: /home/cayub/Documents/Scripts/main_tmux.sh
+          mode: a+x
+
+    - name: Install ruby clocale
+      gem:
+        name: clocale
+        state: latest
+    
+    - name: Install ruby filesize
+      gem:
+        name: filesize
+        state: latest
+
+    - name: Install ruby rdoc
+      gem:
+        name: rdoc
+        state: latest
+
+    - name: Install ruby colorls
+      gem:
+        name: colorls
+        state: latest
+
+
+# Install and Config Dynamic wallpapers for gnome
+- name: Git checkout Dynamic Wallpapers
+  git:
+    repo: 'https://github.com/saint-13/Linux_Dynamic_Wallpapers'
+    dest: /home/cayub/Documents/Misc/wallpapers
+
+- name: Set Perms for Install Dynamic Wallpapers
+  file:
+    dest: /home/cayub/Documents/Misc/wallpapers/Easy_Install.sh
+    mode: a+x
+
+- name: Run Dynamic Wallpaper Install
+  become: yes
+  command: sh /home/cayub/Documents/Misc/wallpapers/Easy_Install.sh
+
+- name: Set wallpaper
+  dconf:
+    key: "/org/gnome/desktop/background/picture-uri"
+    value: "'/usr/share/backgrounds/Dynamic_Wallpapers/RockyMountain.xml'"
+
+- name: Set screensaver
+  dconf:
+    key: "/org/gnome/desktop/screensaver/picture-uri"
+    value: "'/usr/share/backgrounds/Dynamic_Wallpapers/SurfaceBreeze.xml'"
