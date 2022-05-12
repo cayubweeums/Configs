@@ -1,0 +1,25 @@
+Steps required outside of the terminal
+
+- Gnome Extensions
+- - Enable Application menu
+
+- Get 'Gnome-Tweaks' app via the software GUI
+
+- Visit Gnome Extensions website, search for Vitals and click switch icon
+
+- Visit Gnome Extensions website, search for Blur My Shell and click switch icon
+
+- - Visit Gnome Extensions website, search for Sound Input & Output Device Chooser
+ and click switch icon
+
+- Launch terminal and run the install script for nerdfonts
+- - nerdfonts folder located at ~/.nerdfonts
+
+- Set dynamic Wallpaper
+- - Good ones are firewatch2, Mountains
+
+- Set smb server address and share
+- - /etc/fstab
+
+- Set smb server creds
+- - ~/.smbcreds
