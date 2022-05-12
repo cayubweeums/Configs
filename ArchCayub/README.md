@@ -1,4 +1,4 @@
-As described in the About, this is mainly just ArchTitus with my own dotfiles and minor midifications so that I can have an automated installer for my personal system all in one spot. The normal route was for me to pull ArchTitus, run the installer, then do my modifications manually. Thus, I sought to modify his script slightly to make allow me to not have to do any manual steps after install. I have left the rest of the README.md as is.
+This is mainly just ArchTitus with my own dotfiles and minor midifications so that I can have an automated installer for my personal system all in one spot. The normal route was for me to pull ArchTitus, run the installer, then do my modifications manually. Thus, I sought to modify his script slightly to make allow me to not have to do any manual steps after install. I have left the rest of the README.md as is.
 
 # ArchTitus Installer Script
 [![GitHub Super-Linter](https://github.com/ChrisTitusTech/ArchTitus/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
