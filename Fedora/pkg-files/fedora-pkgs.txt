@@ -6,6 +6,7 @@ python
 python-pip
 neofetch
 zsh
+openssl
 ranger
 atom
 ruby
