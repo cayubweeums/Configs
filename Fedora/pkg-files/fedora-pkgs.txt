@@ -8,7 +8,6 @@ neofetch
 zsh
 openssl
 ranger
-atom
 ruby
 ruby-devel
 neovim
@@ -16,9 +15,11 @@ rust
 ripgrep
 bat
 gh
-alacritty
 gnome-extensions-app
 gtk-murrine-engine
 sassc
 libgtop2-devel
 lm_sensors
+gwe
+samba
+flatpak
