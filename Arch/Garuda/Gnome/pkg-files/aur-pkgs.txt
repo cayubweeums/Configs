@@ -1,0 +1,8 @@
+--END OF MINIMAL INSTALL--
+mangohud
+mangohud-common
+gwe
+easyssh
+gotop
+obsidian
+onlyoffice-bin
