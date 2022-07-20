@@ -154,7 +154,7 @@ cd $dir
 # Dynamic Wallpapers Install
 curl -s "https://raw.githubusercontent.com/saint-13/Linux_Dynamic_Wallpapers/main/Easy_Install.sh" | sudo bash
 
-gsetttings set org.gnome.desktop.interface text-scaling-factor 1.25
+gsetttings set org.gnome.mutter experimental-features "['scale-monitor-framebuffer']"
 
 echo -ne "
 -------------------------------------------------------------------------
