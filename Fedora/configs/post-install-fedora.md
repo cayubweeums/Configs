@@ -3,6 +3,12 @@
 - Gnome-Tweaks app
     - Set icons to tela
 
+- Default applications
+    - Set kitty as default
+
+- Keyboard Shortcuts
+    - Set Cntrl + Shift + T to launch kitty
+
 ## Gnome Extensions
 - Clipboard indicator
 - Sound Input and Output Device Chooser

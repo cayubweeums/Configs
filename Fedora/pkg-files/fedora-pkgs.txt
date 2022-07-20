@@ -1,3 +1,4 @@
+@fonts
 util-linux-user
 go
 python3

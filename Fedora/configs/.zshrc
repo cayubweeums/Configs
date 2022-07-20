@@ -17,7 +17,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting asdf)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -64,6 +64,22 @@ fi
 
 IFS=$SAVEIFS
 
+function vpn(){ 
+  class=wg-quick
+  name=nameofconffile
+  if [[ $(sudo wg show) ]]; then
+    echo "~~ Unmounting Server ~~"
+    sudo umount cayubs-server
+    echo "~~  Toggling VPN OFF  ~~"
+    sudo "$class" down "$name"
+  else
+    echo "~~  Toggling VPN ON  ~~"
+    sudo "$class" up "$name"
+    echo "~~ Unmounting Server ~~"
+    sudo mount -a
+  fi
+    echo "~~ Done ~~"
+}
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -80,9 +96,7 @@ alias ls -a='colorls -A --sd'
 alias cat='bat'
 alias vim='nvim'
 alias sus='systemctl suspend -i'
-# Below for laptop
-# alias top='gotop -s -l battery'
-alias top='gotop -s --nvidia'
+alias top='gotop -s -l battery'
 
 # Run neofetch at launch
 clear
