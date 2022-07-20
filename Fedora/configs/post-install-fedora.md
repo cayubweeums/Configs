@@ -27,6 +27,9 @@
 - Set smb server creds
 - - ~/.smbcreds
 
+## Howdy
+- Run `sudo howdy add` to add a new face for the current user
+
 ## Sublime Packages
 - SideBarEnhancements
 - SublimeLinter
