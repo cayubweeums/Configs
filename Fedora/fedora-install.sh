@@ -4,58 +4,6 @@ dir=$(pwd)
 
 echo -ne "
 -------------------------------------------------------------------------
-                            Set up Git
--------------------------------------------------------------------------
-"
-
-printf "Please insert git user name:\n"
-read git_name
-git config --global user.name "$git_name"
-printf "\nPlease insert git email:\n"
-read git_email
-git config --global user.email "$git_email"
-printf "Done!\n\n"
-
-printf "Generating public private key pair"
-ssh-keygen -t rsa -b 4096 -C "$git_email"
-ssh-add ~/.ssh/id_rsa
-printf "Done!\n\n"
-
-printf "Add SSH key to Github?\n"
-select yn in "Yes" "No"; do
-	case $yn in
-		Yes ) printf "Please go to https://github.com/settings/keys and add the your public key:";
-		cat .ssh/id_rsa.pub; printf "\n"; read -p "Press enter to continue"; ssh -T git@github.com; break;;
-		No ) break;;
-	esac
-done
-printf "Done!\n\n"
-
-echo -ne "
--------------------------------------------------------------------------
-                          Set up applications
--------------------------------------------------------------------------
-"
-
-sudo rpmkeys --import https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg
-
-sudo printf "[gitlab.com_paulcarroty_vscodium_repo]\nname=download.vscodium.com\nbaseurl=https://download.vscodium.com/rpms/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg\nmetadata_expire=1h" | sudo tee -a /etc/yum.repos.d/vscodium.repo
-
-sudo dnf install codium -y
-
-printf "Do you want to make VScodium the default GUI editor?\n"
-select yn in "Yes" "No"; do
-	case $yn in
-		Yes ) xdg-mime default vscodium text/plain; break;;
-		No ) break;;
-	esac
-done
-
-cd $dir
-
-
-echo -ne "
--------------------------------------------------------------------------
                             Config DNF
 -------------------------------------------------------------------------
 "
@@ -71,9 +19,39 @@ printf "Done!\n\n"
 
 echo -ne "
 -------------------------------------------------------------------------
+                            Set up Git
+-------------------------------------------------------------------------
+"
+
+sudo dnf -y install git gh curl wget
+
+gh auth login
+
+printf "Please insert git user name:\n"
+read git_name
+git config --global user.name "$git_name"
+printf "\nPlease insert git email:\n"
+read git_email
+git config --global user.email "$git_email"
+printf "Done!\n\n"
+
+cd $dir
+
+
+echo -ne "
+-------------------------------------------------------------------------
                             Install Packages
 -------------------------------------------------------------------------
 "
+sudo dnf -y remove libreoffice-core*
+
+sudo dnf -y upgrade --refresh
+
+# Xanmod Kernel edge install and config
+sudo dnf copr enable rmnscnce/kernel-xanmod -y
+sudo dnf install kernel-xanmod-edge -y
+sudo dnf install kernel-xanmod-edge-headers kernel-xanmod-edge-devel -y
+
 printf "Installing packages"
 input="$dir/pkg-files/fedora-pkgs.txt"
 while read -r line
@@ -82,61 +60,73 @@ do
   sudo dnf -y install ${line}
 done < "$input"
 
-
-echo -ne "
--------------------------------------------------------------------------
-                            Misc Packages
--------------------------------------------------------------------------
-"
 sudo dnf -y groupupdate multimedia --setop="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
 sudo dnf -y groupupdate sound-and-video
 
+# Sublime
+sudo rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg
 
+sudo dnf config-manager --add-repo https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo
 
-# Laptop Specific Packages
-# --------------------------------------
-# printf "Is this a laptop install?\n"
-# select yn in "Yes" "No"; do
-# 	case $yn in
-# 		Yes ) sudo dnf -y install powertop tuned-utils;
-#     sudo systemctl start tuned
-#     printf "tuned recommendation: "
-#     tuned-adm recommend
-#     echo "SUBSYSTEM==\"power_supply\", ATTR{online}==\"0\", RUN+=\"`whereis tuned-adm | cut -d' ' -f2` profile laptop\"" | sudo tee --append /etc/udev/rules.d/powersave.rules
-#     echo "SUBSYSTEM==\"power_supply\", ATTR{online}==\"1\", RUN+=\"`whereis tuned-adm | cut -d' ' -f2` profile desktop\"" | sudo tee --append /etc/udev/rules.d/powersave.rules
-#     echo "SUBSYSTEM==\"power_supply\", ATTR{status}==\"Discharging\", RUN+=\"`whereis tuned-adm | cut -d' ' -f2` profile laptop\"" | sudo tee --append /etc/udev/rules.d/powersave.rules
-#     echo "SUBSYSTEM==\"power_supply\", ATTR{status}!=\"Discharging\", RUN+=\"`whereis tuned-adm | cut -d' ' -f2` profile desktop\"" | sudo tee --append /etc/udev/rules.d/powersave.rules
-#     sudo udevadm control --reload-rules && sudo udevadm trigger
-#     sudo systemctl enable tuned
-#     break;;
-# 		No ) break;;
-# 	esac
-# done
-# --------------------------------------
+sudo dnf install sublime-text 
 
+printf "Do you want to make VScodium the default GUI editor?\n"
+select yn in "Yes" "No"; do
+	case $yn in
+		Yes ) xdg-mime default subl text/plain; break;;
+		No ) break;;
+	esac
+done
 
-# Flatpak install
-# --------------------------------------
+# Flatpak and packages
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-flatpak install flathub com.github.tchx84.Flatseal org.onlyoffice.desktopeditors com.github.muriloventuroso.easyssh  -y
-# --------------------------------------
+flatpak install flathub com.github.tchx84.Flatseal org.onlyoffice.desktopeditors org.polymc.PolyMC com.github.muriloventuroso.easyssh  -y
 
-
-# Anaconda Install
-# --------------------------------------
-curl --output anaconda.sh https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
-sudo chmod +x anaconda.sh
-./anaconda.sh
-# --------------------------------------
-
+# ASDf
+git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.10.2
 
 # Gotop Install
-# --------------------------------------
 wget https://github.com/xxxserxxx/gotop/releases/download/v4.1.3/gotop_v4.1.3_linux_amd64.rpm
 sudo rpm -i gotop_v4.1.3_linux_amd64.rpm
 curl -O -L https://raw.githubusercontent.com/xxxserxxx/gotop/master/fonts/Lat15-VGA16-braille.psf
 setfont Lat15-VGA16-braille.psf
-# --------------------------------------
+
+# Howdy Install/Config
+sudo dnf copr enable principis/howdy
+sudo dnf -y --refresh install howdy
+printf "In the next window place your video camera in the device path under video. (i.e. /dev/video2)\n Type y to continue"
+select yn in "Yes" "No"; do
+	case $yn in
+		Yes ) break;;
+		No ) break;;
+	esac
+done
+sudo howdy config
+sudo sed -i -e '2iauth       sufficient   pam_python.so /lib64/security/howdy/pam.py\' /etc/pam.d/sudo
+sudo sed -i -e '2iauth        sufficient    pam_python.so /lib64/security/howdy/pam.py\' /etc/pam.d/gdm-password
+sudo chmod o+x /lib64/security/howdy/dlib-data
+touch howdy.te && echo -ne "module howdy 1.0;
+
+require {
+    type lib_t;
+    type xdm_t;
+    type v4l_device_t;
+    type sysctl_vm_t;
+    class chr_file map;
+    class file { create getattr open read write };
+    class dir add_name;
+}
+
+#============= xdm_t ==============
+allow xdm_t lib_t:dir add_name;
+allow xdm_t lib_t:file { create write };
+allow xdm_t sysctl_vm_t:file { getattr open read };
+allow xdm_t v4l_device_t:chr_file map;
+" >> howdy.te
+checkmodule -M -m -o howdy.mod howdy.te
+semodule_package -o howdy.pp -m howdy.mod
+sudo semodule -i howdy.pp
+
 
 export PATH=$PATH:~/.local/bin
 
@@ -148,39 +138,23 @@ mkdir ~/.themes
 mkdir ~/.icons
 mkdir ~/athena-server
 
-# GTK Themeing
-# --------------------------------------
+
+echo -ne "
+-------------------------------------------------------------------------
+                            Styling
+-------------------------------------------------------------------------
+"
+# GTK Icon Themeing
 git clone https://github.com/vinceliuice/Tela-circle-icon-theme.git
 cd Tela-circle-icon-theme/
 ./install.sh -a -d ~/.icons
 
 cd $dir
 
-git clone https://github.com/vinceliuice/Graphite-gtk-theme.git
-cd Graphite-gtk-theme/
-./install.sh -d ~/.themes --tweaks rimless
-# --------------------------------------
-
-
 # Dynamic Wallpapers Install
-# --------------------------------------
 curl -s "https://raw.githubusercontent.com/saint-13/Linux_Dynamic_Wallpapers/main/Easy_Install.sh" | sudo bash
-# --------------------------------------
 
-
-# Firefox Progressive Web App Install
-# --------------------------------------
-# Import GPG key and enable the repository
-# sudo rpm --import https://packagecloud.io/filips/FirefoxPWA/gpgkey
-# echo -e "[firefoxpwa]\nname=FirefoxPWA\nmetadata_expire=300\nbaseurl=https://packagecloud.io/filips/FirefoxPWA/rpm_any/rpm_any/\$basearch\ngpgkey=https://packagecloud.io/filips/FirefoxPWA/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0\nenabled=1" | sudo tee /etc/yum.repos.d/firefoxpwa.repo
-
-# Update DNF cache
-# sudo dnf -q makecache -y --disablerepo="*" --enablerepo="firefoxpwa"
-
-# Install the package
-# sudo dnf install firefoxpwa
-# --------------------------------------
-
+gsetttings set org.gnome.desktop.interface text-scaling-factor 1.25
 
 echo -ne "
 -------------------------------------------------------------------------
@@ -208,40 +182,8 @@ gem install colorls
 
 sudo touch ~/.smbcreds
 
-# echo -ne "
-# -------------------------------------------------------------------------
-#                           Linux surface install
-# -------------------------------------------------------------------------
-# "
-
-# # Surface Specific kernel
-# # --------------------------------------
-# sudo dnf config-manager \
-#     --add-repo=https://pkg.surfacelinux.com/fedora/linux-surface.repo
-
-# sudo dnf -y install --allowerasing kernel-surface iptsd libwacom-surface
-# sudo systemctl enable iptsd
-
-# echo "[Unit]" | sudo tee -a /etc/systemd/system/default-kernel.path
-# echo "Description=Fedora default kernel updater" | sudo tee -a /etc/systemd/system/default-kernel.path
-# echo "[Path]" | sudo tee -a /etc/systemd/system/default-kernel.path
-# echo "PathChanged=/boot" | sudo tee -a /etc/systemd/system/default-kernel.path
-# echo "[Install]" | sudo tee -a /etc/systemd/system/default-kernel.path
-# echo "WantedBy=default.target" | sudo tee -a /etc/systemd/system/default-kernel.path
-
-# echo "[Unit]" | sudo tee -a /etc/systemd/system/default-kernel.service
-# echo "Description=Fedora default kernel updater" | sudo tee -a /etc/systemd/system/default-kernel.service
-# echo "[Service]" | sudo tee -a /etc/systemd/system/default-kernel.service
-# echo "Type=oneshot" | sudo tee -a /etc/systemd/system/default-kernel.service
-# echo 'ExecStart=/bin/sh -c "grubby --set-default /boot/vmlinuz*surface*"' | sudo tee -a /etc/systemd/system/default-kernel.service
-
-# sudo systemctl enable default-kernel.path
-# sudo grubby --set-default /boot/vmlinuz*surface*
-# # --------------------------------------
-
 read -p "Enter new Hostname for this machine: " hostname
 sudo hostnamectl set-hostname $hostname
-
 
 echo "#//IPADDER/SHARENAME /Path/to/mount cifs credentials=/home/cayub/.smbcreds,noperm 0 0" | sudo tee -a /etc/fstab
 touch ~/.smbcreds
