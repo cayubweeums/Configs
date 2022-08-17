@@ -9,6 +9,8 @@
 - Keyboard Shortcuts
     - Set Cntrl + Shift + T to launch kitty
 
+- Run nvim +PackerSync or nvim then in the command prompt PackerSync
+
 ## Gnome Extensions
 - Clipboard indicator
 - Sound Input and Output Device Chooser

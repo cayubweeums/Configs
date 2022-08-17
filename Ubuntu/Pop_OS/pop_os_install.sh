@@ -40,15 +40,6 @@ done < "$input"
 
 # Astrovim
 git clone https://github.com/AstroNvim/AstroNvim ~/.config/nvim
-nvim +PackerSync
-
-printf "Do you want to make nvim the default GUI editor?\n"
-select yn in "Yes" "No"; do
-	case $yn in
-		Yes ) xdg-mime default nvim text/plain; break;;
-		No ) break;;
-	esac
-done
 
 # Flatpaks
 flatpak install flathub com.github.tchx84.Flatseal com.leinardi.gwe org.polymc.PolyMC com.github.muriloventuroso.easyssh com.valvesoftware.Steam -y

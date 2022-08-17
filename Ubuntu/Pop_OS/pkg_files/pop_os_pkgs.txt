@@ -15,3 +15,6 @@ ripgrep
 bat
 samba
 steam-devices
+build-essential
+lua5.4
+libreadline-dev
