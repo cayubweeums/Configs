@@ -91,10 +91,10 @@ cd ~/.nerd-fonts
 ./install.sh
 
 # Install all ruby packages and colorLS
-gem install clocale
-gem install filesize
-gem install rdoc
-gem install colorls
+sudo gem install clocale
+sudo gem install filesize
+sudo gem install rdoc
+sudo gem install colorls
 
 
 sudo touch ~/.smbcreds
