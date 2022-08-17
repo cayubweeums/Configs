@@ -106,7 +106,6 @@ sudo sed -i -e '2iauth       sufficient   pam_python.so /lib64/security/howdy/pa
 sudo sed -i -e '2iauth        sufficient    pam_python.so /lib64/security/howdy/pam.py\' /etc/pam.d/gdm-password
 sudo chmod o+x /lib64/security/howdy/dlib-data
 touch howdy.te && echo -ne "module howdy 1.0;
-
 require {
     type lib_t;
     type xdm_t;
@@ -116,14 +115,13 @@ require {
     class file { create getattr open read write };
     class dir add_name;
 }
-
 #============= xdm_t ==============
 allow xdm_t lib_t:dir add_name;
 allow xdm_t lib_t:file { create write };
 allow xdm_t sysctl_vm_t:file { getattr open read };
 allow xdm_t v4l_device_t:chr_file map;
 " >> howdy.te
-checkmodule -M -m -o howdy.mod howdy.te
+checkmodule -M -m -o owdy.mod howdy.te
 semodule_package -o howdy.pp -m howdy.mod
 sudo semodule -i howdy.pp
 
@@ -192,4 +190,4 @@ echo -ne "
 -------------------------------------------------------------------------
             Read post-install-fedora.txt in ~/Documents
 -------------------------------------------------------------------------
-"
+"h
