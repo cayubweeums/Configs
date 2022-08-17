@@ -51,7 +51,7 @@ select yn in "Yes" "No"; do
 done
 
 # Flatpaks
-flatpak install flathub com.github.tchx84.Flatseal com.leinardi.gwe org.polymc.PolyMC com.github.muriloventuroso.easyssh -y
+flatpak install flathub com.github.tchx84.Flatseal com.leinardi.gwe org.polymc.PolyMC com.github.muriloventuroso.easyssh com.valvesoftware.Steam -y
 
 # ASDf
 git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.10.2
