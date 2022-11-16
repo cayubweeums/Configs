@@ -66,16 +66,18 @@ IFS=$SAVEIFS
 
 function vpn(){ 
   class=wg-quick
-  name=nameofconffile
+  name=<nameofconffile>
   if [[ $(sudo wg show) ]]; then
-    echo "~~ Unmounting Server ~~"
-    sudo umount cayubs-server
+    echo "~~ Unmounting Share ~~"
+    sudo umount <sharename>
+    sleep 2
     echo "~~  Toggling VPN OFF  ~~"
     sudo "$class" down "$name"
   else
     echo "~~  Toggling VPN ON  ~~"
     sudo "$class" up "$name"
-    echo "~~ Unmounting Server ~~"
+    sleep 2
+    echo "~~ Mounting Share ~~"
     sudo mount -a
   fi
     echo "~~ Done ~~"
