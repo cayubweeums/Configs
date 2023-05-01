@@ -7,9 +7,9 @@ echo -ne "
                             Config DNF
 -------------------------------------------------------------------------
 "
-echo "fastestmirror=True" | sudo tee -a /etc/dnf/dnf.conf
-echo "minrate=10k" | sudo tee -a /etc/dnf/dnf.conf
-echo "max_parallel_downloads=10" | sudo tee -a /etc/dnf/dnf.conf
+echo "fastestmirror=True" | sudo tee -a /etc/dnf/dnf.conf &&
+echo "minrate=10k" | sudo tee -a /etc/dnf/dnf.conf &&
+echo "max_parallel_downloads=10" | sudo tee -a /etc/dnf/dnf.conf &&
 echo "defaultyes=True" | sudo tee -a /etc/dnf/dnf.conf
 
 printf "Enabling RPM Fusion\n"
