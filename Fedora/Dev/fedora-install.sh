@@ -16,6 +16,8 @@ printf "Enabling RPM Fusion\n"
 sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 printf "Done!\n\n"
 
+# Enable Pycharm via copr
+sudo dnf copr enable phracek/PyCharm
 
 echo -ne "
 -------------------------------------------------------------------------
@@ -111,3 +113,11 @@ echo -ne "
             Reboot to enable RDP
 -------------------------------------------------------------------------
 "
+echo -ne "
+..............Installing Conda now
+"
+
+cd /tmp
+sleep 5
+wget https://repo.anaconda.com/archive/Anaconda3-2023.03-1-Linux-x86_64.sh
+bash Anaconda3-2023.03-1-Linux-x86_64.sh
