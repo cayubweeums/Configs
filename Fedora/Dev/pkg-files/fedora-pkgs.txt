@@ -20,4 +20,4 @@ sassc
 libgtop2-devel
 lm_sensors
 flatpak
-charm-community
+pycharm-community

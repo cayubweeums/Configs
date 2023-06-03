@@ -62,33 +62,12 @@ function extract {
 fi
 }
 
-IFS=$SAVEIFS
-
-function vpn(){ 
-  class=wg-quick
-  name=<nameofconffile>
-  if [[ $(sudo wg show) ]]; then
-    echo "~~ Unmounting Share ~~"
-    sudo umount <sharename>
-    sleep 2
-    echo "~~  Toggling VPN OFF  ~~"
-    sudo "$class" down "$name"
-  else
-    echo "~~  Toggling VPN ON  ~~"
-    sudo "$class" up "$name"
-    sleep 2
-    echo "~~ Mounting Share ~~"
-    sudo mount -a
-  fi
-    echo "~~ Done ~~"
-}
-
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
-export PATH="$PATH:$HOME/.local/share/gem/ruby/3.0.0/bin"
+export PATH="$PATH:$HOME/.local"
 export PATH="$PATH:/home/cayub/bin"
 
 source $(dirname $(gem which colorls))/tab_complete.sh
@@ -98,7 +77,7 @@ alias ls -a='colorls -A --sd'
 alias cat='bat'
 alias vim='nvim'
 alias sus='systemctl suspend -i'
-alias top='gotop -s -l battery'
+alias top='gotop -l kitchensink'
 
 # Run neofetch at launch
 clear

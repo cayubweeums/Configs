@@ -17,7 +17,7 @@ sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-r
 printf "Done!\n\n"
 
 # Enable Pycharm via copr
-sudo dnf copr enable phracek/PyCharm
+sudo dnf copr enable phracek/PyCharm -y
 
 echo -ne "
 -------------------------------------------------------------------------
@@ -74,7 +74,7 @@ export PATH=$PATH:~/.local/bin
 cp -r $dir/configs/.config/* ~/.config/
 cp $dir/configs/.zshrc ~/Documents/
 cp $dir/configs/.p10k.zsh ~/Documents/
-cp $dir/configs/post-install-fedora.txt ~/Documents/
+cp $dir/configs/post-install-fedora.md ~/Documents/
 
 echo -ne "
 -------------------------------------------------------------------------
@@ -103,17 +103,6 @@ gem install colorls
 sudo systemctl enable xrdp.service
 
 echo -ne "
--------------------------------------------------------------------------
-            Read post-install-fedora.txt in ~/Documents
--------------------------------------------------------------------------
-"
-
-echo -ne "
--------------------------------------------------------------------------
-            Reboot to enable RDP
--------------------------------------------------------------------------
-"
-echo -ne "
 ..............Installing Conda now
 "
 
@@ -121,3 +110,19 @@ cd /tmp
 sleep 5
 wget https://repo.anaconda.com/archive/Anaconda3-2023.03-1-Linux-x86_64.sh
 bash Anaconda3-2023.03-1-Linux-x86_64.sh
+
+sleep 15
+
+echo -ne "
+-------------------------------------------------------------------------
+            Read post-install-fedora.txt in ~/Documents
+-------------------------------------------------------------------------
+"
+
+echo -ne "
+-------------------------------------------------------------------------
+            Rebooting to enable RDP
+-------------------------------------------------------------------------
+"
+
+sudo reboot now
