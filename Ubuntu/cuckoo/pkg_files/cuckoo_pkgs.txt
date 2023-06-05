@@ -1,0 +1,1 @@
+git build-essential python3-dev libhyperscan5 libhyperscan-dev libjpeg8-dev zlib1g-dev unzip p7zip-full rar unace-nonfree cabextract yara tcpdump genisoimage qemu-system-x86 qemu-utils qemu-system-common python3 python3-pip gcc libx11-dev
