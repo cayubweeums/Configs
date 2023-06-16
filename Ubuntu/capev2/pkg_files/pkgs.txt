@@ -1,0 +1,1 @@
+openssl ssh dbus-x11 dbus qemu-guest-agent git qemu-guest-agent net-tools xrdp

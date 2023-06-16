@@ -1,3 +1,12 @@
+# Attempt to do vm install and config using vmbox with vmcloack like in regular cuckoo install
+# Sources:
+# - https://utopianknight.com/malware/cuckoo-installation-on-ubuntu-20/
+# - https://cuckoo-hatch.cert.ee/static/docs/installation/cuckoo/
+# - https://beginninghacking.net/2022/11/16/how-to-setup-your-own-malware-analysis-box-cuckoo-sandbox/
+
+
+
+
 #!/bin/bash
 
 dir=$(pwd)
@@ -35,19 +44,13 @@ do
   sudo apt-get install ${line} -y
 done < "$input"
 
-sudo adduser cayub kvm
-
 echo -ne "
 -------------------------------------------------------------------------
                             Config Perms
 -------------------------------------------------------------------------
 "
 
-## Fix kvm perms
-sudo adduser "$USER" kvm && sudo chmod 666 /dev/kvm
-
-## Setup tcpdump
-sudo adduser "$USER" pcap
+sudo groupadd pcap && sudo usermod -a -G pcap cayub && sudo chgrp pcap /usr/sbin/tcpdump && sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump && sudo adduser "$USER" kvm && sudo chmod 666 /dev/kvm
 
 ## Disable apparmor
 sudo ln -s /etc/apparmor.d/usr.sbin.tcpdump /etc/apparmor.d/disable/ && sudo apparmor_parser -R /etc/apparmor.d/disable/usr.sbin.tcpdump && sudo apparmor_parser -r /etc/apparmor.d/usr.sbin.tcpdumpz
@@ -64,7 +67,7 @@ sleep 5
 wget https://repo.anaconda.com/archive/Anaconda3-2023.03-1-Linux-x86_64.sh
 bash Anaconda3-2023.03-1-Linux-x86_64.sh
 
-conda create -n cuckoo python=3.10 && conda activate cuckoo && pip install wheel
+source ~/.bashrc && conda create -n cuckoo python=3.10 && conda activate cuckoo && pip install wheel
 
 
 echo -ne "
@@ -88,11 +91,11 @@ echo -ne "
 
 git clone https://github.com/hatching/vmcloak.git && cd vmcloak && pip install . && cd ..
 
-sudo /home/cayub/.anaconda3/envs/cuckoo/bin/vmcloak-qemubridge br0 192.168.30.1/24
+# sudo /home/cayub/anaconda3/envs/cuckoo/bin/vmcloak-qemubridge br0 192.168.30.1/24
 
-sudo mkdir -p /etc/qemu && echo 'allow br0' | sudo tee /etc/qemu/bridge.conf
+# sudo mkdir -p /etc/qemu && echo 'allow br0' | sudo tee /etc/qemu/bridge.conf
 
-sudo chmod u+s /usr/lib/qemu/qemu-bridge-helper
+# sudo chmod u+s /usr/lib/qemu/qemu-bridge-helper
 
 
 echo -ne "
@@ -104,6 +107,22 @@ echo -ne "
 vmcloak isodownload --win10x64 --download-to ~/win10x64.iso
 
 sudo mkdir /mnt/win10x64 && sudo mount -o loop,ro /home/cayub/win10x64.iso /mnt/win10x64
+
+echo -ne "
+replace in the following editor
+replaced
+"-soundhw", "hda",
+
+with
+
+"-device", "intel-hda",
+"-device", "hda-duplex",
+"
+sleep 30
+
+nano /home/cayub/anaconda3/envs/cuckoo/lib/python3.10/site-packages/vmcloak/platforms/qemu.py
+
+sudo adduser "$USER" kvm && sudo chmod 666 /dev/kvm
 
 vmcloak --debug init --win10x64 --hddsize 128 --cpus 4 --ramsize 4096 --network 192.168.30.0/24 --vm qemu --ip 192.168.30.2 --iso-mount /mnt/win10x64 win10base br0
 
