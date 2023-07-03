@@ -29,13 +29,13 @@ sudo dnf -y install git gh curl wget
 
 gh auth login
 gh auth setup-git
-# printf "Please insert git user name:\n"
-# read git_name
-# git config --global user.name "$git_name"
-# printf "\nPlease insert git email:\n"
-# read git_email
-# git config --global user.email "$git_email"
-# printf "Done!\n\n"
+printf "Please insert git user name:\n"
+read git_name
+git config --global user.name "$git_name"
+printf "\nPlease insert git email:\n"
+read git_email
+git config --global user.email "$git_email"
+printf "Done!\n\n"
 
 cd $dir
 
