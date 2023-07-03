@@ -1,9 +1,6 @@
 ## Prerequisites
 - `git`
-- `Fedora 36` installed and booted
+- `Fedora 38` installed and booted
 
 ## Install Steps
-- `git clone [this repo]`
-- `cd Fedora`
-- `chmod +x fedora-install.sh`
-- `./fedora-install.sh`
+- `git clone https://github.com/cayubweeums/Configs.git && cd Configs/Fedora/Dev && chmod +x fedora-install.sh && ./fedora-install.sh`
