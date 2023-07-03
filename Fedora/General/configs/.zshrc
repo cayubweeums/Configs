@@ -36,6 +36,6 @@ alias ls -a='colorls -A --sd'
 alias cat='bat'
 alias vim='nvim'
 alias sus='systemctl suspend -i'
-alias top='gotop -s -l battery'
+alias top='gotop -l kitchensink'
 
 neofetch
