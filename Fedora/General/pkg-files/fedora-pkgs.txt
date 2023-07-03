@@ -14,11 +14,9 @@ neovim
 rust
 ripgrep
 bat
-gnome-extensions-app
 gtk-murrine-engine
 sassc
 libgtop2-devel
 lm_sensors
 samba
 flatpak
-wireguard-tools
