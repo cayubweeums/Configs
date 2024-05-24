@@ -1,0 +1,1 @@
+@fonts util-linux-user go python3 python python-pip fastfetch btop zsh openssl ranger ruby ruby-devel neovim rust ripgrep bat lm_sensors
